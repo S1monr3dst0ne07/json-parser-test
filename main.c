@@ -5,13 +5,16 @@
 
 
 #define BUF_COUNT 4096
-char buf[BUF_COUNT];
+#define BUF_TYPE char
+BUF_TYPE buf[BUF_COUNT];
 
 int main()
 {
     FILE* fp = fopen("test.json", "r");
     
-    read(fp, buf, BUF_COUNT);
+    fread(buf, BUF_COUNT, sizeof(char), fp);
     init(buf);
+
+    parse();
 
 }
