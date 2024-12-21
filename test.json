@@ -1,0 +1,47 @@
+[
+  {
+    "_id": "67668ef1c3972d501c096308",
+    "index": 0,
+    "guid": "1fde2e87-44c9-439c-a074-f639fc52db2b",
+    "isActive": true,
+    "balance": "$2,218.04",
+    "picture": "http://placehold.it/32x32",
+    "age": 38,
+    "eyeColor": "blue",
+    "name": "Hale Robinson",
+    "gender": "enby",
+    "company": "BULLJUICE",
+    "email": "halerobinson@bulljuice.com",
+    "phone": "+1 (927) 548-2405",
+    "address": "201 Clay Street, Titanic, South Dakota, 7409",
+    "about": "Occaecat reprehenderit mollit est culpa anim do adipisicing incididunt officia enim duis cupidatat. In exercitation proident ut aute est ea sunt laboris cillum officia. Sit voluptate excepteur ut sunt laboris incididunt pariatur ullamco occaecat eu. Dolore occaecat ad labore minim do commodo irure adipisicing dolore tempor in excepteur deserunt elit. Duis esse nisi tempor exercitation non. Fugiat consectetur aliqua nulla ex pariatur. Consequat occaecat culpa eiusmod culpa duis dolor incididunt ipsum in ullamco anim.\r\n",
+    "registered": "2017-06-27T04:59:56 -02:00",
+    "latitude": 7.766695,
+    "longitude": -125.929069,
+    "tags": [
+      "amet",
+      "occaecat",
+      "duis",
+      "ut",
+      "fugiat",
+      "excepteur",
+      "sit"
+    ],
+    "friends": [
+      {
+        "id": 0,
+        "name": "Kelley Hunter"
+      },
+      {
+        "id": 1,
+        "name": "Nash Cherry"
+      },
+      {
+        "id": 2,
+        "name": "Conrad Valdez"
+      }
+    ],
+    "greeting": "Hello, Hale Robinson! You have 2 unread messages.",
+    "favoriteFruit": "banana"
+  }
+]
