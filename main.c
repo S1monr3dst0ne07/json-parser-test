@@ -4,7 +4,7 @@
 #include "json.c"
 
 
-#define BUF_COUNT 4096
+#define BUF_COUNT (1 << 16)
 #define BUF_TYPE char
 BUF_TYPE buf[BUF_COUNT];
 
