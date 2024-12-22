@@ -247,6 +247,105 @@ json_node_t parse(char* src)
 }
 
 
+/*
+//compile-time static string length
+#define ctssl(x) (sizeof(x)-1)
+
+//assuming most minimal formatting 
+int size(json_node_t a)
+{
+    if (!a)
+        return ctssl("null");
+   
+    switch(a->type)
+    {
+        case JSON_TYPE_NULL:  return ctssl("null");
+        case JSON_TYPE_TRUE:  return ctssl("true");
+        case JSON_TYPE_FALSE: return ctssl("false");
+        case JSON_TYPE_OBJECT:
+            
+    }
+}
+
+*/
+
+char* dstPtr = NULL;
+
+void generEmit(char* c)
+{
+    for (; *c; c++)
+        *dstPtr++ = *c;
+}
+
+#define generNull  generEmit("null")
+#define generTrue  generEmit("true")
+#define generFalse generEmit("false")
+
+
+void generValue(json_node_t node) 
+{
+    if (!node)
+        generNull;
+
+    switch(node->type)
+    {
+        case JSON_TYPE_NULL:  generNull; break;
+        case JSON_TYPE_TRUE:  generTrue; break;
+        case JSON_TYPE_FALSE: generFalse; break;
+        case JSON_TYPE_OBJECT:
+            if (!node->prev)
+                generEmit("{ ");
+
+            generValue(node->content.name);
+            generEmit(" : ");
+            generValue(node->sub);
+
+            if (!node->next) generEmit(" }");
+            else
+            {
+                generEmit(", ");
+                generValue(node->next);
+            }
+            break;
+
+        case JSON_TYPE_ARRAY:
+            if (!node->prev)
+                generEmit("[ ");
+
+            generValue(node->sub);
+
+            if (!node->next) generEmit(" ]");
+            else
+            {
+                generEmit(", ");
+                generValue(node->next);
+            }
+            break;
+
+        case JSON_TYPE_NUMBER:
+            generEmit("<number>");
+            break;
+
+        case JSON_TYPE_STRING:
+            generEmit("\"");
+            generEmit(node->content.string);
+            generEmit("\"");
+            break;
+            
+    }
+}
+
+
+void gener(json_node_t node, char* dst)
+{
+    dstPtr = dst;
+    generValue(node);
+    *dstPtr = '\0';
+}
+
+
+
+
 
 
 

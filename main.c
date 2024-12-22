@@ -14,6 +14,9 @@ int main()
     
     fread(buf, BUF_COUNT, sizeof(char), fp);
 
-    parse(buf);
+    json_node_t node = parse(buf);
+    gener(node, buf);
+
+    printf("%s\n", buf);
 
 }
