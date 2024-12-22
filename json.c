@@ -1,5 +1,51 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+
+
+
+
+
+typedef struct _json_node_t
+{
+    struct _json_node_t* next;
+    struct _json_node_t* prev;
+    struct _json_node_t* sub;
+
+    enum json_type_t
+    {
+        JSON_TYPE_NULL   = 0,
+        JSON_TYPE_TRUE   = 1,
+        JSON_TYPE_FALSE  = 2,
+        JSON_TYPE_OBJECT = 3,
+        JSON_TYPE_ARRAY  = 4,
+        JSON_TYPE_NUMBER = 5,
+        JSON_TYPE_STRING = 6,
+    } type;
+
+    union
+    {
+        char* string;
+        int number;
+        struct _json_node_t* name;
+    } content;
+
+} *json_node_t;
+#define json_node_size sizeof(json_node_t)
+
+
+json_node_t createJsonNode(enum json_type_t type)
+{
+    json_node_t node = malloc(json_node_size);
+    memset(node, 0x0, json_node_size);
+    node->type = type;
+    return node;
+}
+
+
+
+
 
 
 char* srcPtr = NULL;
@@ -51,7 +97,6 @@ void expectSeq(const char* c)
 {
     for (; *c; c++)
         expect(*c);
-
 }
 
 
@@ -64,69 +109,95 @@ void cons(char c)
 }
 
 
-void parse();
-void parseObject();
-void parseArray();
-void parseString();
+json_node_t parseObject();
+json_node_t parseArray();
+json_node_t parseString();
+json_node_t parse();
 
 
-void parseObject()
+void linkNodes(json_node_t a, json_node_t b)
 {
-    start
+    if (a) a->next = b;
+    if (b) b->prev = a;
+}
+
+
+
+json_node_t parseObject()
+{
+    json_node_t node;
+    json_node_t prev = NULL;
+
     expect('{');
     while (peek() != '}')
     {
+        node = createJsonNode(JSON_TYPE_OBJECT);
+        linkNodes(node, prev);
+
         ws();
-
-        //should be string
-        parseString();
-
+        node->content.name = parseString();
         expect(':');
-
-        parse();
-
+        node->sub = parse();
         cons(',');
+
+        prev = node;
     }
     cons('}');
 
-    end
+    return node;
 }
 
-void parseArray()
+json_node_t parseArray()
 {
-    start
+    json_node_t node;
+    json_node_t prev = NULL;
+
     expect('[');
     while (peek() != ']')
     {
+        node = createJsonNode(JSON_TYPE_ARRAY);
+        linkNodes(node, prev);
+
         ws();
-
-        parse();
-
+        node->sub = parse();
         cons(',');
+
+        prev = node;
     }
     cons(']');
-    end
+
+    return node;
 }
 
-void parseString()
+json_node_t parseString()
 {
-    start
+    json_node_t node = createJsonNode(JSON_TYPE_STRING);
+
     expect('"');
+
+    char* strBase = srcPtr;
 
     while (peek() != '"')
         pop();
 
+    int strLen = srcPtr - strBase;
+    char* str = malloc(strLen + 1);
+    memcpy(str, strBase, strLen);
+    str[strLen] = '\0';
+    node->content.string = str;
+
     expect('"');
 
-    end
+    return node;
 }
 
-void parseInt()
+
+json_node_t parseInt()
 {
-    start
+    json_node_t node = createJsonNode(JSON_TYPE_NUMBER);
 
     int num = 0;
-    while (peek() >= '0' && peek() <= '9')
+    while (isdigit(peek()))
         num = num * 10 + (pop() - '0');
 
     while (
@@ -135,69 +206,60 @@ void parseInt()
       peek() != ']'
     ) srcPtr++;
 
-    //printf("num: %d\n", num);
-
-    end
+    node->content.number = num;
 }
 
-void parseNeg()
+json_node_t parseNeg()
 {
-    start
-
     expect('-');
 
-    parseInt();
+    json_node_t node = parseInt();
+    node->content.number *= -1;
 
-
-    end
+    return node;
 }
 
-void parseTrue()
+json_node_t parseTrue()
 {
-    start
     expectSeq("true");
-    end
+    return createJsonNode(JSON_TYPE_TRUE);
 }
 
-void parseFalse()
+json_node_t parseFalse()
 {
-    start
     expectSeq("false");
-    end
+    return createJsonNode(JSON_TYPE_FALSE);
 }
-void parseNull()
+json_node_t parseNull()
 {
-    start
     expectSeq("null");
-    end
+    return createJsonNode(JSON_TYPE_NULL);
 }
 
 
 
 
-void parse()
+json_node_t parse()
 {
-    start
-    
     ws();
+
+    printf("%c\n", peek());
     
     switch(peek())
     {
-        case '{': parseObject();    break;
-        case '[': parseArray();     break;
-        case '"': parseString();    break;
+        case '{': return parseObject();    break;
+        case '[': return parseArray();     break;
+        case '"': return parseString();    break;
         case '0' ... '9': 
-        case '+': parseInt();       break;
-        case '-': parseNeg();       break;
-        case 't': parseTrue();      break;
-        case 'f': parseFalse();     break;
-        case 'n': parseNull();      break;
+        case '+': return parseInt();       break;
+        case '-': return parseNeg();       break;
+        case 't': return parseTrue();      break;
+        case 'f': return parseFalse();     break;
+        case 'n': return parseNull();      break;
         default:
             printf("parse(): invaild  char: '%c'\n", peek()); 
             error();
     }
-
-    end
 }
 
 
