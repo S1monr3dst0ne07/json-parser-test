@@ -32,7 +32,7 @@ typedef struct _json_node_t
     } content;
 
 } *json_node_t;
-#define json_node_size sizeof(json_node_t)
+#define json_node_size sizeof(struct _json_node_t)
 
 
 json_node_t createJsonNode(enum json_type_t type)
@@ -243,7 +243,6 @@ json_node_t parse()
 {
     ws();
 
-    printf("%c\n", peek());
     
     switch(peek())
     {
