@@ -13,8 +13,7 @@ int main()
     FILE* fp = fopen("test.json", "r");
     
     fread(buf, BUF_COUNT, sizeof(char), fp);
-    init(buf);
 
-    parse();
+    parse(buf);
 
 }

@@ -50,27 +50,20 @@ json_node_t createJsonNode(enum json_type_t type)
 
 char* srcPtr = NULL;
 
-void init(char* src)
-{
-    srcPtr = src;
-}
 
-char peek()
+char parsePeek()
 {
     return *srcPtr;
 }
 
-char pop()
+char parsePop()
 {
     return *srcPtr++;
 }
 
 #define isSpace(c) (c == ' ' || c == '\t' || c == '\n' || c == '\r')
 
-#define start
-#define end
-
-void ws()
+void parseWhiteSpace()
 {
     while (isSpace(*srcPtr)) 
         srcPtr++;
@@ -80,39 +73,34 @@ void ws()
 void _error(int line)
 {
     printf("error at line: %d\n", line);
-    printf("dump:\n'%s'\n", srcPtr);
     exit(0);
 }
 
 
-void expect(char c)
+void parseExpect(char* c)
 {
-    ws();
-    if (pop() != c)
-        error();
-    ws();
-}
-
-void expectSeq(const char* c)
-{
+    parseWhiteSpace();
     for (; *c; c++)
-        expect(*c);
+        if (parsePop() != *c)
+            error();
+    parseWhiteSpace();
 }
 
 
-void cons(char c)
+
+void parseCons(char c)
 {
-    ws();
+    parseWhiteSpace();
     while (*srcPtr == c)
         srcPtr++; 
-    ws();
+    parseWhiteSpace();
 }
 
 
 json_node_t parseObject();
 json_node_t parseArray();
 json_node_t parseString();
-json_node_t parse();
+json_node_t parseValue();
 
 
 void linkNodes(json_node_t a, json_node_t b)
@@ -128,21 +116,21 @@ json_node_t parseObject()
     json_node_t node;
     json_node_t prev = NULL;
 
-    expect('{');
-    while (peek() != '}')
+    parseExpect("{");
+    while (parsePeek() != '}')
     {
         node = createJsonNode(JSON_TYPE_OBJECT);
         linkNodes(node, prev);
 
-        ws();
+        parseWhiteSpace();
         node->content.name = parseString();
-        expect(':');
-        node->sub = parse();
-        cons(',');
+        parseExpect(":");
+        node->sub = parseValue();
+        parseCons(',');
 
         prev = node;
     }
-    cons('}');
+    parseCons('}');
 
     return node;
 }
@@ -152,19 +140,19 @@ json_node_t parseArray()
     json_node_t node;
     json_node_t prev = NULL;
 
-    expect('[');
-    while (peek() != ']')
+    parseExpect("[");
+    while (parsePeek() != ']')
     {
         node = createJsonNode(JSON_TYPE_ARRAY);
         linkNodes(node, prev);
 
-        ws();
-        node->sub = parse();
-        cons(',');
+        parseWhiteSpace();
+        node->sub = parseValue();
+        parseCons(',');
 
         prev = node;
     }
-    cons(']');
+    parseCons(']');
 
     return node;
 }
@@ -173,12 +161,12 @@ json_node_t parseString()
 {
     json_node_t node = createJsonNode(JSON_TYPE_STRING);
 
-    expect('"');
+    parseExpect("\"");
 
     char* strBase = srcPtr;
 
-    while (peek() != '"')
-        pop();
+    while (parsePeek() != '"')
+        parsePop();
 
     int strLen = srcPtr - strBase;
     char* str = malloc(strLen + 1);
@@ -186,7 +174,7 @@ json_node_t parseString()
     str[strLen] = '\0';
     node->content.string = str;
 
-    expect('"');
+    parseExpect("\"");
 
     return node;
 }
@@ -197,21 +185,15 @@ json_node_t parseInt()
     json_node_t node = createJsonNode(JSON_TYPE_NUMBER);
 
     int num = 0;
-    while (isdigit(peek()))
-        num = num * 10 + (pop() - '0');
-
-    while (
-      peek() != ',' &&
-      peek() != '}' &&
-      peek() != ']'
-    ) srcPtr++;
+    while (isdigit(parsePeek()))
+        num = num * 10 + (parsePop() - '0');
 
     node->content.number = num;
 }
 
 json_node_t parseNeg()
 {
-    expect('-');
+    parseExpect("-");
 
     json_node_t node = parseInt();
     node->content.number *= -1;
@@ -221,44 +203,55 @@ json_node_t parseNeg()
 
 json_node_t parseTrue()
 {
-    expectSeq("true");
+    parseExpect("true");
     return createJsonNode(JSON_TYPE_TRUE);
 }
 
 json_node_t parseFalse()
 {
-    expectSeq("false");
+    parseExpect("false");
     return createJsonNode(JSON_TYPE_FALSE);
 }
 json_node_t parseNull()
 {
-    expectSeq("null");
+    parseExpect("null");
     return createJsonNode(JSON_TYPE_NULL);
 }
 
-
-
-
-json_node_t parse()
+json_node_t parseValue()
 {
-    ws();
+    parseWhiteSpace();
 
     
-    switch(peek())
+    switch(parsePeek())
     {
-        case '{': return parseObject();    break;
-        case '[': return parseArray();     break;
-        case '"': return parseString();    break;
+        case '{': return parseObject();
+        case '[': return parseArray();
+        case '"': return parseString();
         case '0' ... '9': 
-        case '+': return parseInt();       break;
-        case '-': return parseNeg();       break;
-        case 't': return parseTrue();      break;
-        case 'f': return parseFalse();     break;
-        case 'n': return parseNull();      break;
+        case '+': return parseInt();
+        case '-': return parseNeg();
+        case 't': return parseTrue();
+        case 'f': return parseFalse();
+        case 'n': return parseNull();
         default:
-            printf("parse(): invaild  char: '%c'\n", peek()); 
+            printf("parseValue(): invaild  char: '%c'\n", parsePeek()); 
             error();
     }
 }
+
+json_node_t parse(char* src)
+{
+    srcPtr = src;
+    return parseValue();
+}
+
+
+
+
+
+
+
+
 
 
