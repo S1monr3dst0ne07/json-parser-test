@@ -8,14 +8,20 @@
 #define BUF_TYPE char
 BUF_TYPE buf[BUF_COUNT];
 
+
 int main()
 {
-    FILE* fp = fopen("test.json", "r");
-    
+    FILE* fp;
+    fp = fopen("test.json", "r");
     fread(buf, BUF_COUNT, sizeof(char), fp);
+    fclose(fp);
 
     json_node_t node = parse(buf);
     gener(node, buf);
+
+    fp = fopen("out.json", "w");
+    fwrite(buf, strlen(buf), sizeof(char), fp);
+    fclose(fp);
 
     printf("%s\n", buf);
 
