@@ -139,12 +139,14 @@ json_node_t parseArray()
 {
     json_node_t node;
     json_node_t prev = NULL;
+    json_node_t base = NULL;
 
     parseExpect("[");
     while (parsePeek() != ']')
     {
         node = createJsonNode(JSON_TYPE_ARRAY);
-        linkNodes(node, prev);
+        linkNodes(prev, node);
+        if (!base) base = node;
 
         parseWhiteSpace();
         node->sub = parseValue();
@@ -154,7 +156,7 @@ json_node_t parseArray()
     }
     parseCons(']');
 
-    return node;
+    return base;
 }
 
 json_node_t parseString()
