@@ -115,12 +115,14 @@ json_node_t parseObject()
 {
     json_node_t node;
     json_node_t prev = NULL;
+    json_node_t base = NULL;
 
     parseExpect("{");
     while (parsePeek() != '}')
     {
         node = createJsonNode(JSON_TYPE_OBJECT);
-        linkNodes(node, prev);
+        linkNodes(prev, node);
+        if (!base) base = node;
 
         parseWhiteSpace();
         node->content.name = parseString();
@@ -132,7 +134,7 @@ json_node_t parseObject()
     }
     parseCons('}');
 
-    return node;
+    return base;
 }
 
 json_node_t parseArray()
@@ -249,28 +251,6 @@ json_node_t parse(char* src)
 }
 
 
-/*
-//compile-time static string length
-#define ctssl(x) (sizeof(x)-1)
-
-//assuming most minimal formatting 
-int size(json_node_t a)
-{
-    if (!a)
-        return ctssl("null");
-   
-    switch(a->type)
-    {
-        case JSON_TYPE_NULL:  return ctssl("null");
-        case JSON_TYPE_TRUE:  return ctssl("true");
-        case JSON_TYPE_FALSE: return ctssl("false");
-        case JSON_TYPE_OBJECT:
-            
-    }
-}
-
-*/
-
 char* dstPtr = NULL;
 
 void generEmit(char* c)
@@ -325,7 +305,20 @@ void generValue(json_node_t node)
             break;
 
         case JSON_TYPE_NUMBER:
-            generEmit("<number>");
+            static char buf[32] = { '\0' };
+            char* p = &buf[sizeof(buf)];
+            int num = node->content.number;
+            if (!num) *(--p) = '0';
+            if (num < 0)
+            {
+                generEmit("-");
+                num = -num;
+            }
+            for (; num; num /= 10)
+                *(--p) = (num % 10) + '0';
+
+            generEmit(p); 
+
             break;
 
         case JSON_TYPE_STRING:
