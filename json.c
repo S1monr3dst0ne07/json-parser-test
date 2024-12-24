@@ -44,10 +44,6 @@ json_node_t createJsonNode(enum json_type_t type)
 }
 
 
-
-
-
-
 char* srcPtr = NULL;
 
 
@@ -340,7 +336,28 @@ void gener(json_node_t node, char* dst)
 
 
 
+void delete(json_node_t node)
+{
+    switch(node->type)
+    {
+        case JSON_TYPE_NULL:
+        case JSON_TYPE_TRUE:
+        case JSON_TYPE_FALSE:
+        case JSON_TYPE_NUMBER:
+            break;
+        case JSON_TYPE_OBJECT:
+            free(node->content.name);
+        case JSON_TYPE_ARRAY:
+            if (node->next) delete(node->next);
+            delete(node->sub);
+            break;
+        case JSON_TYPE_STRING:
+            free(node->content.string);
+            break;
+    }
 
+    free(node);
+}
 
 
 
