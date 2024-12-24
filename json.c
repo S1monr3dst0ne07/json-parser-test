@@ -346,7 +346,7 @@ void delete(json_node_t node)
         case JSON_TYPE_NUMBER:
             break;
         case JSON_TYPE_OBJECT:
-            free(node->content.name);
+            delete(node->content.name);
         case JSON_TYPE_ARRAY:
             if (node->next) delete(node->next);
             delete(node->sub);
