@@ -23,7 +23,7 @@ int main()
     fwrite(buf, strlen(buf), sizeof(char), fp);
     fclose(fp);
 
-    //delete(node);
+    delete(node);
 
     printf("%s\n", buf);
 
